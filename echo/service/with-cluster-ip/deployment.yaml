@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echo-with-cluster-ip
+  namespace: echo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: echo-with-cluster-ip
+  template:
+    metadata:
+      labels:
+        app: echo-with-cluster-ip
+    spec:
+      containers:
+      - name: echo
+        image: nvgl/echo:0.0.3

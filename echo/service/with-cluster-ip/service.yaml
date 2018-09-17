@@ -1,0 +1,49 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: echo-with-cluster-ip
+  namespace: echo
+spec:
+  selector:
+    app: echo-with-cluster-ip
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+    name: port
+
+# Each Service of type ‘ClusterIP’ is assigned a unique IP address (called as clusterIP)
+
+# kubectl get service echo-with-cluster-ip
+# NAME                   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+# echo-with-cluster-ip   ClusterIP   10.106.93.72   <none>        80/TCP    36s
+
+# The service is loadbalanced across all the matching poda
+#
+# kubectl get endpoints echo-with-cluster-ip
+# NAME                   ENDPOINTS                                            AGE
+# echo-with-cluster-ip   192.168.1.3:8000,192.168.1.4:8000,192.168.2.4:8000   1m
+
+# kubectl get pods -n echo -l app=echo-with-cluster-ip -o wide
+#NAME                                    READY     STATUS    RESTARTS   AGE       IP            NODE
+#echo-with-cluster-ip-5cb98877b8-2662p   1/1       Running   0          41m       192.168.1.3   k8-1
+#echo-with-cluster-ip-5cb98877b8-mtj4r   1/1       Running   0          41m       192.168.2.4   k8-2
+#echo-with-cluster-ip-5cb98877b8-stbj4   1/1       Running   0          41m       192.168.1.4   k8-1
+
+# Kube-router
+# TCP  10.106.93.72:80 rr
+#  -> 192.168.1.3:8000             Masq    1      0          0
+#  -> 192.168.1.4:8000             Masq    1      0          0
+#  -> 192.168.2.4:8000             Masq    1      0          0
+
+# Dns
+#
+# A entry return the Cluster Ip
+# dig A echo-with-cluster-ip.echo.svc.cluster.local +short
+# 10.106.93.72
+
+# SRV ENTRY
+# _my-port-name._my-port-protocol.my-svc.my-namespace.svc.cluster.local
+#
+# dig SRV _port._TCP.echo-with-cluster-ip.echo.svc.cluster.local +short
+# 10 100 80 echo-with-cluster-ip.echo.svc.cluster.local.

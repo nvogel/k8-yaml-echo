@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: echo-with-load-balancer
+  namespace: echo
+spec:
+  type: LoadBalancer
+  selector:
+    app: echo-with-load-balancer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+    name: port
